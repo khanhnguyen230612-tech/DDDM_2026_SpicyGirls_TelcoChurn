@@ -1,75 +1,130 @@
-DDDM 2026 Telco Customer Churn: Retention Decision Support System
+# DDDM 2026: Telecom Customer Churn Prediction and Retention Decision Support
 
-Nhóm Spicy Girls, môn Data Driven Decision Making, VNUK.
-Thành viên: Nguyễn Gia Khả Ái (23060016), Nguyễn Ngọc Vân Khanh (23060012), Nguyễn Lê Tiên An (23060006).
+Group Spicy Girls, Data Driven Decision Making (DDDM) 2026, VNUK.
+Members: Nguyễn Gia Khả Ái (23060016), Nguyễn Ngọc Vân Khanh (23060012), Nguyễn Lê Tiên An (23060006).
 
-Mục tiêu dự án
+This repository holds a reproducible decision support system that predicts which telecom customers are likely to churn and turns the predictions into retention decisions. The pipeline is: dataset, MySQL, KNIME, Logistic Regression, MySQL (results), Power BI dashboard, decisions.
 
-Xây dựng hệ thống hỗ trợ quyết định giữ chân khách hàng viễn thông theo luồng: Dataset, MySQL, KNIME, MySQL (kết quả), Power BI, Decisions. Mô hình chính là Logistic Regression dự đoán xác suất rời bỏ dịch vụ.
+## 1. Decision questions
 
-Ba câu hỏi quyết định
+- DQ1: Which customer segments, defined by contract, tenure and monthly charges, have the highest probability of churn?
+- DQ2: Which add-on services (Tech Support, Online Security) reduce churn risk?
+- DQ3: How should the retention budget be allocated across risk groups defined by the predicted probability?
 
-DQ1: Nhóm khách nào (theo hợp đồng, tenure, cước hàng tháng) có xác suất rời bỏ cao nhất?
-DQ2: Dịch vụ bổ trợ nào (Tech Support, Online Security) giảm rủi ro rời bỏ rõ nhất?
-DQ3: Ngân sách marketing giữ chân nên phân bổ cho các nhóm rủi ro như thế nào để giữ được nhiều doanh thu nhất?
+## 2. Results at a glance
 
-Dữ liệu
+| Item | Result |
+|---|---|
+| Customers | 7,043 (1,869 churners, 26.54%) |
+| Split | 80/20, stratified by churn_flag, seed 42: 5,634 train, 1,409 test |
+| Model | Logistic Regression (IRLS) with 18 input variables, trained on the training set only |
+| Threshold | 0.25 (chosen to reach the recall target) |
+| Recall (test) | 0.818 (target at least 0.80) |
+| Precision (test) | 0.512 |
+| AUC-ROC (test) | 0.860 (target at least 0.75) |
+| Risk tiers (test) | High (probability at least 0.50): 309 customers, 68.0% churn. Medium (0.25 to below 0.50): 289, 33.2%. Low (below 0.25): 811, 8.4% |
 
-Nguồn: Kaggle, IBM Telco Customer Churn. Đường dẫn: điền link trang dataset tại đây.
-Quy mô: 7,043 bản ghi, 21 thuộc tính. Biến mục tiêu: Churn (Yes hoặc No).
-Giấy phép và quyền sở hữu: điền theo thông tin ghi trên trang dataset.
-Repo không chứa dữ liệu khách hàng nếu giấy phép không cho phép. Hãy tải CSV từ nguồn và đặt vào máy cục bộ.
+Known limitations: the threshold was chosen on the test set, there is one split and no cross-validation, multicollinearity was not tested with the variance inflation factor, and the data has no cost or date information. The paper (docs/paper) discusses them.
 
-Cấu trúc thư mục
+## 3. Repository structure
 
-sql: các script MySQL, chạy theo thứ tự số.
-knime: workflow đã xuất (Week2_Data_Cleaning.knwf).
-docs/screenshots: ảnh minh chứng.
-data: ghi chú nguồn dữ liệu.
+| Path | Content |
+|---|---|
+| sql/ | MySQL scripts 01 to 07, run in numeric order (section 6) |
+| knime/ | KNIME workflows: Week2_Data_Cleaning.knwf and Week3_ML_Churn.knwf |
+| dashboard/ | Power BI source files (.pbix) |
+| docs/paper/ | IEEE-style paper (PDF and editable DOCX) and figures |
+| docs/slides/ | Week 4 presentation (PPTX and PDF) |
+| docs/screenshots/ | Evidence screenshots for Weeks 2 and 3 |
+| docs/ | Work breakdown structure (WBS) with planned and actual effort |
 
-Yêu cầu môi trường
+The customer CSV is not in the repository (see section 4).
 
-MySQL Server 8.0 trở lên và MySQL Workbench.
-KNIME Analytics Platform 5.x.
-Git.
-Power BI Desktop (dùng từ Week 3).
+## 4. Data
 
-Cách chạy lại pipeline Week 2
+- Source: IBM Telco Customer Churn sample data set, distributed on Kaggle (https://www.kaggle.com/datasets/blastchar/telco-customer-churn). Check the licence shown on that page before reuse.
+- Size: 7,043 records and 21 attributes. Target: Churn (Yes or No).
+- The repository does not redistribute the file. The .gitignore excludes all .csv files. Download the CSV from the source and keep it on your computer.
 
-Bước 1. Tải file CSV từ Kaggle và lưu trên máy.
-Bước 2. Trong MySQL Workbench, tạo schema dddm_telco_churn (câu lệnh: CREATE DATABASE dddm_telco_churn;).
-Bước 3. Chạy sql/01_create_raw_table.sql đến hết lệnh CREATE TABLE. File chỉ tạo bảng nếu chưa có, nên chạy lại không làm mất dữ liệu.
-Bước 4. Dùng Table Data Import Wizard để nạp CSV vào bảng raw_customer_data (Use existing table). Chạy phần kiểm tra cuối file 01, kết quả đúng là 7043 dòng.
-Bước 5. Chạy sql/02_data_quality_before.sql để xem chất lượng dữ liệu trước làm sạch.
-Bước 6. Chạy sql/03_create_cleaned_and_dq_log.sql để tạo bảng đích và ghi số liệu BEFORE.
-Bước 7. Trong KNIME, chọn File, Import KNIME Workflow, chọn knime/Week2_Data_Cleaning.knwf.
-Bước 8. Mở node Credentials Configuration (mysql_cred) và nhập user, mật khẩu MySQL của bạn. Repo không chứa mật khẩu. Kiểm tra MySQL Connector trỏ tới localhost:3306, database dddm_telco_churn.
-Bước 9. Execute toàn bộ workflow. Kết quả ghi vào bảng cleaned_customer_data.
-Bước 10. Chạy sql/04_verify_after_and_kpi.sql để kiểm tra, ghi số liệu AFTER và xem KPI.
+## 5. Requirements
 
-Bảng trong database
+- MySQL Server 8.0 or later and MySQL Workbench
+- KNIME Analytics Platform 5.x
+- Power BI Desktop (Windows)
+- Git
 
-raw_customer_data: dữ liệu thô, toàn bộ cột kiểu text, 7,043 dòng.
-raw_customer_data_week1_backup: bản sao lưu dữ liệu thô, chỉ có trên máy chính (7,043 dòng). Máy khác không cần bảng này.
-dim_contract: bảng tham chiếu loại hợp đồng, khóa chính contract_type.
-cleaned_customer_data: dữ liệu sạch, khóa chính customerID, khóa ngoại Contract.
-data_quality_log: nhật ký chất lượng dữ liệu trước và sau làm sạch.
+## 6. How to rerun the pipeline from the beginning
 
-Quy tắc làm sạch Week 2
+Run these steps in order. Every SQL script is safe to run again unless its header says otherwise.
 
-TotalCharges trống (11 khách có tenure bằng 0): điền 0, giữ dòng.
-customerID trùng: loại bỏ, giữ dòng đầu tiên (kết quả thực tế ghi trong data_quality_log).
-Nhãn No internet service và No phone service: gộp về No.
-Outlier IQR: phát hiện và giữ lại.
-Thêm hai cột: churn_flag (1 nếu Churn là Yes) và tenure_group (bốn nhóm).
+1. Download the Telco CSV from the source in section 4.
+2. In MySQL Workbench, create the schema: `CREATE DATABASE dddm_telco_churn;`
+3. Run `sql/01_create_raw_table.sql`. It creates raw_customer_data with every column as text, so all 7,043 rows load (the default import wizard drops 11 rows with a blank TotalCharges).
+4. Load the CSV into raw_customer_data with the Table Data Import Wizard (use the existing table). Run the check at the end of file 01. The correct result is 7,043 rows.
+5. Run `sql/02_data_quality_before.sql` to see data quality before cleaning.
+6. Run `sql/03_create_cleaned_and_dq_log.sql`. It creates dim_contract, cleaned_customer_data and data_quality_log, and records the BEFORE figures.
+7. In KNIME, choose File, Import KNIME Workflow, and select `knime/Week2_Data_Cleaning.knwf`. Open the Credentials Configuration node, enter your MySQL user and password, and check that the MySQL Connector points to localhost:3306 and the database dddm_telco_churn. The repository contains no password. Execute the whole workflow. It writes cleaned_customer_data.
+8. Run `sql/04_verify_after_and_kpi.sql` to log the AFTER figures and see the KPIs.
+9. Run `sql/06_create_churn_predictions.sql` to create the empty table churn_predictions.
+10. In KNIME, import `knime/Week3_ML_Churn.knwf`, enter the credentials in the same way and execute it. The workflow reads cleaned_customer_data, splits the data 80/20 (stratified, seed 42), trains Logistic Regression on the training set, predicts for all customers, applies the 0.25 threshold, evaluates on the test set and writes 7,043 rows to churn_predictions.
+11. Run `sql/07_dashboard_view.sql`. It creates the view v_dashboard_data (cleaned data, predictions and risk tier) and prints three checks. Expected results: 7,043 rows in the view; 5,634 train and 1,409 test; on the test set High 309 (68.0%), Medium 289 (33.2%), Low 811 (8.4%).
+12. Refresh the dashboard (section 8).
 
-Trạng thái
+For a clean second computer, `sql/05_setup_for_teammate.sql` builds the empty schema and tables in one run. After it, load the CSV (step 4) and continue from step 7.
 
-Week 1: định nghĩa bài toán, kiến trúc, WBS. Hoàn thành.
-Week 2: MySQL, KNIME, chất lượng dữ liệu, ghi kết quả về MySQL. Xem lịch sử commit.
-Week 3: Logistic Regression, ghi dự đoán về MySQL, bản nháp Power BI.
-Week 4: dashboard hoàn chỉnh, ba khuyến nghị, báo cáo và demo.
+## 7. Database tables
 
-Giấy phép và liêm chính học thuật
+| Table or view | Content |
+|---|---|
+| raw_customer_data | Raw data, every column as text, 7,043 rows |
+| dim_contract | Contract types and lengths, primary key contract_type |
+| cleaned_customer_data | Cleaned data, primary key customerID, foreign key Contract to dim_contract; adds churn_flag and tenure_group |
+| data_quality_log | Data quality results before and after cleaning |
+| churn_predictions | One row per customer: customerID (primary key), dataset_split, actual_churn, churn_probability, predicted_churn |
+| v_dashboard_data (view) | cleaned_customer_data joined with churn_predictions, plus risk_tier |
 
-Nhóm trích dẫn nguồn dữ liệu và công cụ theo chính sách liêm chính học thuật của VNUK.
+## 8. Dashboard: source, refresh and rerun
+
+The Power BI dashboard uses the view v_dashboard_data, one row per customer.
+
+- Option A, direct connection: in Power BI choose Get Data, MySQL database, enter the server and database, and select v_dashboard_data. After a rerun, choose Refresh.
+- Option B, CSV export: in MySQL Workbench run `SELECT * FROM v_dashboard_data;`, export the result grid to CSV, and point Power BI to the file (Get Data, Text/CSV). After a rerun, export again and choose Refresh. The Week 3 draft dashboard used this option.
+
+The dashboard shows the KPIs (number of customers and churn rate), churn by contract, tenure group, payment method and add-on services, the distribution of the predicted probability, the risk tiers and a table of priority customers. Slicers filter the views by contract, internet service, tenure group, risk tier and dataset split. When the split slicer is set to test, the tier figures match the check in file 07.
+
+## 9. Cleaning rules (Week 2)
+
+- TotalCharges blank (11 customers with tenure 0): set to 0, keep the rows.
+- Duplicate customerID: none found (the result is in data_quality_log).
+- Labels No internet service and No phone service: merged into No (2,208 rows changed).
+- IQR outliers: none found in MonthlyCharges or tenure.
+- Two columns added: churn_flag (1 if Churn is Yes) and tenure_group (four bins: 0-12, 13-24, 25-48, 49-72 months).
+
+## 10. Model design
+
+- Input variables: 18 (4 demographic, 9 phone and internet services, 3 contract and payment, 2 numeric: tenure and MonthlyCharges).
+- Excluded columns: customerID (identifier), Churn and churn_flag (target), tenure_group (duplicates tenure), TotalCharges (close to tenure times MonthlyCharges).
+- Targets set in Week 1: recall at least 0.80 and AUC-ROC at least 0.75. Both are met on the test set at threshold 0.25.
+
+## 11. Individual contributions
+
+The WBS (docs/DDDM_WBS_Week3_and_Week4_Plan.xlsx) is the record of tasks, owners, planned hours and actual hours.
+
+| Task | Owner |
+|---|---|
+| Feature and experimental design, KNIME Logistic Regression model (3.1) | Khanh |
+| Methodology and Results sections of the paper, workflow figure (3.2) | Ái |
+| Week 3 draft dashboard in Power BI (3.3) | An |
+| Update of the WBS and the Week 4 plan (3.5) | An |
+| Week 3 evidence on GitHub (3.6) | Khanh |
+| End-to-end pipeline and README (4.1, 4.2) | Khanh |
+| Final dashboard (4.3) | An |
+| Recommendations (4.4) | An (draft), Khanh (model figures) |
+| IEEE paper (4.5) | Ái (Abstract, Keywords, Introduction, Methodology, Experiments and Results), An (Discussion and Decision Recommendations), Khanh (Related Work, Conclusion, References, assembly and formatting) |
+| Pipeline diagram (4.6) | Ái |
+| Presentation (4.7) and final submission check (4.9) | Whole group |
+| Plan versus actual reflection (4.8) | Each member enters own hours; An consolidates |
+
+## 12. Academic integrity
+
+The group cites its data source, tools and papers according to the VNUK academic integrity policy. The database password is never stored in the repository.
