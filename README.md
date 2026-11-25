@@ -88,9 +88,9 @@ For a clean second computer, `sql/05_setup_for_teammate.sql` builds the empty sc
 The Power BI dashboard uses the view v_dashboard_data, one row per customer.
 
 - Option A, direct connection: in Power BI choose Get Data, MySQL database, enter the server and database, and select v_dashboard_data. After a rerun, choose Refresh.
-- Option B, CSV export: in MySQL Workbench run `SELECT * FROM v_dashboard_data;`, export the result grid to CSV, and point Power BI to the file (Get Data, Text/CSV). After a rerun, export again and choose Refresh. The Week 3 draft dashboard used this option.
+- Option B, CSV export: in MySQL Workbench run `SELECT * FROM v_dashboard_data;`, export the result grid to CSV, and point Power BI to the file (Get Data, Text/CSV). After a rerun, export again and choose Refresh. The final dashboard (dashboard/DDDM_Dashboard_Final.pbix) uses this option and loads churn_dashboard_data.csv. The data is stored inside the .pbix file, so it opens without the CSV. To refresh it from a new export, open Transform data, Data source settings, and change the file path (the saved path points to the computer of the author).
 
-The dashboard shows the KPIs (number of customers and churn rate), churn by contract, tenure group, payment method and add-on services, the distribution of the predicted probability, the risk tiers and a table of priority customers. Slicers filter the views by contract, internet service, tenure group, risk tier and dataset split. When the split slicer is set to test, the tier figures match the check in file 07.
+The dashboard shows the KPIs (number of customers and churn rate), churn by contract, tenure group, payment method, internet service and add-on services, churn by monthly-charge bin, the distribution of the predicted probability, the risk tiers and a table of priority customers (probability at least 0.25, highest first). The two add-on charts (Online Security and Tech Support) count only customers with internet service (DSL or Fiber optic), as in the Week 2 analysis. A text note reports the model performance on the test set at threshold 0.25 (recall 0.818, precision 0.512, AUC 0.860), computed outside Power BI. Slicers filter the views by contract, internet service, tenure group, risk tier and dataset split. With no slicer selected, the tiers cover all 7,043 customers (High 1,531, Medium 1,460, Low 4,052). When the split slicer is set to test, the tier figures match the check in file 07 (309, 289 and 811).
 
 ## 9. Cleaning rules (Week 2)
 
@@ -108,7 +108,7 @@ The dashboard shows the KPIs (number of customers and churn rate), churn by cont
 
 ## 11. Individual contributions
 
-The WBS (docs/DDDM_WBS_Week3_and_Week4_Plan.xlsx) is the record of tasks, owners, planned hours and actual hours.
+The WBS files are the record of tasks, owners, planned hours and actual hours: docs/DDDM_WBS_Week3_and_Week4_Plan.xlsx (Week 3 and the Week 4 plan) and docs/DDDM_WBS_Week4.xlsx (Week 4 final hours).
 
 | Task | Owner |
 |---|---|
